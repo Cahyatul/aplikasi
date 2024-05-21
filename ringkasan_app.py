@@ -68,28 +68,27 @@ url_input = st.text_input("Masukkan URL artikel")
 
 
     
-# Tombol untuk menampilkan teks
 if st.button('Lihat Teks'):
     text = ''
     if url_input:
         # Proses URL
         text = get_text_from_url(url_input)
    
+    if text_input:
+        # Proses teks langsung
+        text = text_input
 
     if text:
         text = clean_text(text)
         text = remove_stopwords(text)
-        sentences = split_sentences(text)
-        tokens = tokenize_text(sentences)
-        st.session_state.text = ' '.join([' '.join(token) for token in tokens])
+        st.session_state.text = text
         st.write(st.session_state.text)
     else:
         st.error('Silakan masukkan URL atau masukkan teks langsung')
 
-# Tombol untuk menampilkan ringkasan
 if st.button('Tampilkan Ringkasan'):
     if 'text' in st.session_state:
-        summary = summarize_text(st.session_state.text)
+        summary = text_rank_summarize(st.session_state.text)
         st.write(summary)
     else:
         st.error('Silakan masukkan teks untuk diringkas.')
