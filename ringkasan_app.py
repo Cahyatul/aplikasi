@@ -1,7 +1,7 @@
 import streamlit as st
-import requests
+from transformers import pipeline
 
-# Initialize the summarization pipeline
+# Set up the summarization pipeline
 summarizer = pipeline("summarization")
 
 # Title of the Streamlit app
