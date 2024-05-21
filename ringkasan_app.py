@@ -1,4 +1,5 @@
 import streamlit as st
+nltk transformers
 from transformers import pipeline
 
 # Set up the summarization pipeline
