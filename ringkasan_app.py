@@ -1,7 +1,5 @@
 import streamlit as st
 import requests
-from PyPDF2 import PdfReader
-from docx import Document
 from bs4 import BeautifulSoup
 import re
 import nltk
