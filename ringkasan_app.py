@@ -62,9 +62,6 @@ def summarize_text(text):
 # Input URL
 url_input = st.text_input("Masukkan URL artikel")
 
-# Input Teks
-text_input = st.text_area("Atau masukkan teks langsung di sini")
-
     
 # Tombol untuk menampilkan teks
 if st.button('Lihat Teks'):
@@ -74,7 +71,9 @@ if st.button('Lihat Teks'):
         text = get_text_from_url(url_input)
 
        
-    
+    # Input Teks
+text_input = st.text_area("Atau masukkan teks langsung di sini")
+
     if text:
         text = clean_text(text)
         text = remove_stopwords(text)
