@@ -88,7 +88,7 @@ if st.button('Lihat Teks'):
 
 if st.button('Tampilkan Ringkasan'):
     if 'text' in st.session_state:
-        summary = text_rank_summarize(st.session_state.text)
+        summary = summarize_text(st.session_state.text)
         st.write(summary)
     else:
         st.error('Silakan masukkan teks untuk diringkas.')
