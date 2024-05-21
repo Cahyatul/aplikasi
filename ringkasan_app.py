@@ -1,5 +1,5 @@
 import streamlit as st
-from transformers import pipeline
+import requests
 
 # Initialize the summarization pipeline
 summarizer = pipeline("summarization")
