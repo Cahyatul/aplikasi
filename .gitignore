@@ -7,9 +7,7 @@ __pycache__/
 venv/
 .env
 
-# PDF and DOCX files
-*.pdf
-*.docx
+
 
 # Streamlit cache
 .streamlit/
