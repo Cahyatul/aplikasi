@@ -17,6 +17,10 @@ st.markdown(
 )
 st.write("Ringkas Artikel dengan mudah dan cepat")
 
+ # Input Teks
+text_input = st.text_area("Atau masukkan teks langsung di sini")
+
+
 # Fungsi untuk mengambil teks dari URL
 def get_text_from_url(url):
     try:
@@ -62,6 +66,7 @@ def summarize_text(text):
 # Input URL
 url_input = st.text_input("Masukkan URL artikel")
 
+
     
 # Tombol untuk menampilkan teks
 if st.button('Lihat Teks'):
@@ -69,10 +74,7 @@ if st.button('Lihat Teks'):
     if url_input:
         # Proses URL
         text = get_text_from_url(url_input)
-
-       
-    # Input Teks
-text_input = st.text_area("Atau masukkan teks langsung di sini")
+   
 
     if text:
         text = clean_text(text)
