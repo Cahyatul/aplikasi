@@ -1,79 +1,96 @@
 import streamlit as st
-from PyPDF2 import PdfFileReader
+import requests
+from PyPDF2 import PdfReader
 from docx import Document
-import nltk
-from nltk.corpus import stopwords
-from nltk.tokenize import sent_tokenize, word_tokenize
-import heapq
+from bs4 import BeautifulSoup
 import re
-import spacy
+import nltk
+from Sastrawi.StopWordRemover.StopWordRemoverFactory import StopWordRemoverFactory
+from sumy.parsers.plaintext import PlaintextParser
+from sumy.nlp.tokenizers import Tokenizer as SumyTokenizer
+from sumy.summarizers.text_rank import TextRankSummarizer
 
+# Mengunduh tokenizer untuk bahasa Inggris (yang dapat digunakan untuk teks Indonesia)
 nltk.download('punkt')
-nltk.download('stopwords')
 
-# Load SpaCy model
-nlp = spacy.load('en_core_web_sm')
+st.markdown(
+    '<h2 style="color:blue;">Welcome To Text Summary</h2>',
+    unsafe_allow_html=True
+)
+st.write("Ringkas Artikel dengan mudah dan cepat")
 
-def read_pdf(file):
-    pdf_reader = PdfFileReader(file)
-    text = ""
-    for page_num in range(pdf_reader.getNumPages()):
-        text += pdf_reader.getPage(page_num).extract_text()
+# Fungsi untuk mengambil teks dari URL
+def get_text_from_url(url):
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            paragraphs = soup.find_all('p')
+            article_text = ' '.join(p.get_text() for p in paragraphs)
+            return article_text
+        else:
+            return f"Error: Status code {response.status_code}"
+    except requests.RequestException as e:
+        return f"Request failed: {e}"
+
+# Fungsi untuk pembersihan teks
+def clean_text(text):
+    text = re.sub(r'\[.*?\]', '', text)  # Menghapus teks dalam tanda kurung
+    text = re.sub(r'\s+', ' ', text)  # Menghapus spasi berlebih
+    text = text.lower()  # Mengubah teks menjadi huruf kecil
     return text
 
-def read_docx(file):
-    doc = Document(file)
-    text = [p.text for p in doc.paragraphs]
-    return "\n".join(text)
+# Fungsi untuk menghapus stopwords
+def remove_stopwords(text):
+    factory = StopWordRemoverFactory()
+    stopword_remover = factory.create_stop_word_remover()
+    return stopword_remover.remove(text)
 
-def text_rank_summarize(text, top_n=5):
-    doc = nlp(text)
-    sentences = [sent.text for sent in doc.sents]
+# Fungsi untuk memisahkan teks menjadi kalimat-kalimat
+def split_sentences(text):
+    return nltk.sent_tokenize(text)
+
+# Fungsi untuk tokenisasi teks
+def tokenize_text(sentences):
+    return [nltk.word_tokenize(sentence) for sentence in sentences]
+
+# Fungsi untuk meringkas teks menggunakan TextRank
+def summarize_text(text):
+    parser = PlaintextParser.from_string(text, SumyTokenizer("english"))
+    summarizer = TextRankSummarizer()
+    summary = summarizer(parser.document, 3)  # Merangkum menjadi 3 kalimat
+    return ' '.join([str(sentence) for sentence in summary])
+
+# Input URL
+url_input = st.text_input("Masukkan URL artikel")
+
+# Input Teks
+text_input = st.text_area("Atau masukkan teks langsung di sini")
+
     
-    words = word_tokenize(text.lower())
-    stop_words = set(stopwords.words('english'))
-    words = [word for word in words if word.isalnum() and word not in stop_words]
+# Tombol untuk menampilkan teks
+if st.button('Lihat Teks'):
+    text = ''
+    if url_input:
+        # Proses URL
+        text = get_text_from_url(url_input)
 
-    word_freq = {}
-    for word in words:
-        if word not in word_freq:
-            word_freq[word] = 1
-        else:
-            word_freq[word] += 1
-
-    max_freq = max(word_freq.values())
-    for word in word_freq:
-        word_freq[word] = word_freq[word] / max_freq
-
-    sentence_scores = {}
-    for sent in sentences:
-        for word in word_tokenize(sent.lower()):
-            if word in word_freq:
-                if sent not in sentence_scores:
-                    sentence_scores[sent] = word_freq[word]
-                else:
-                    sentence_scores[sent] += word_freq[word]
-
-    summary_sentences = heapq.nlargest(top_n, sentence_scores, key=sentence_scores.get)
-    summary = ' '.join(summary_sentences)
-    return summary
-
-st.title("Article Summarization App")
-
-uploaded_file = st.file_uploader("Choose a file (text, PDF, or DOCX)", type=["txt", "pdf", "docx"])
-
-if uploaded_file:
-    if uploaded_file.type == "text/plain":
-        content = str(uploaded_file.read(), "utf-8")
-    elif uploaded_file.type == "application/pdf":
-        content = read_pdf(uploaded_file)
-    elif uploaded_file.type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        content = read_docx(uploaded_file)
+       
     
-    st.subheader("Original Content")
-    st.text_area("Content", content, height=300)
-    
-    if st.button("Summarize"):
-        summary = text_rank_summarize(content)
-        st.subheader("Summary")
+    if text:
+        text = clean_text(text)
+        text = remove_stopwords(text)
+        sentences = split_sentences(text)
+        tokens = tokenize_text(sentences)
+        st.session_state.text = ' '.join([' '.join(token) for token in tokens])
+        st.write(st.session_state.text)
+    else:
+        st.error('Silakan masukkan URL atau masukkan teks langsung')
+
+# Tombol untuk menampilkan ringkasan
+if st.button('Tampilkan Ringkasan'):
+    if 'text' in st.session_state:
+        summary = summarize_text(st.session_state.text)
         st.write(summary)
+    else:
+        st.error('Silakan masukkan teks untuk diringkas.')
