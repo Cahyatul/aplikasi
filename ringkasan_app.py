@@ -18,7 +18,7 @@ st.markdown(
 st.write("Ringkas Artikel dengan mudah dan cepat")
 
  # Input Teks
-text_input = st.text_area("Atau masukkan teks langsung di sini")
+text_input = st.text_area("masukkan teks langsung di sini")
 
 
 # Fungsi untuk mengambil teks dari URL
